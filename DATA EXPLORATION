@@ -1,0 +1,69 @@
+--AMAZON SALES DATA EXPLORATION
+--Skills used: Aggregate Functions, Data type conversion, Windows Functions, CTE's, Temp Tables,
+
+--viewing all data available in the Data set
+ SELECT *
+FROM [Portfolio Project]..['Amazon Sale Report$']
+ORDER BY 3
+
+-- Showing Status and CountOfStatus of Each Ordered item
+SELECT Status, count(Status) as Count_Of_Status
+FROM [Portfolio Project]..['Amazon Sale Report$']
+GROUP BY Status
+ORDER BY Count_Of_Status desc
+
+-- Shows The Orders Status and the Count of Status from each Order ID
+SELECT [Order ID], Status, count(Status) as Count_Of_Status
+FROM [Portfolio Project]..['Amazon Sale Report$']
+--WHERE Status = 'Cancelled'
+GROUP BY  [Order ID], Status
+ORDER BY count(status) desc
+
+--Shows the Orders that that were cancelled, quantity and Amount
+SELECT [Order ID], Date, status, qty,Amount
+FROM [Portfolio Project]..['Amazon Sale Report$']
+WHERE Status = 'Cancelled'
+ORDER BY 1
+
+--Counting the TotalSizeOrder, then using CTE to calculate the percentage Of Total Order per Size
+
+SELECT COUNT(size) as TotalSizeOrders
+FROM [Portfolio Project]..['Amazon Sale Report$']
+
+WITH PercentageOfOrder as
+(
+SELECT Size, count(size) as TotalSizeOrder,(CAST (count(size) as float)/128975)*100 as percentage_Of_TotalSize_Order
+FROM [Portfolio Project]..['Amazon Sale Report$']
+GROUP BY Size
+)
+SELECT Size, TotalSizeOrder, Round(percentage_Of_TotalSize_Order,1) as percentage_Of_TotalSize_Orders
+FROM PercentageOfOrder
+
+
+--Showing The Total Number Of Orders For Each State
+ SELECT [ship-state], COUNT([ship-state]) as TotalOrderPerState
+ FROM [Portfolio Project]..['Amazon Sale Report$']
+WHERE [ship-state] is not null
+ GROUP BY [ship-state]
+ ORDER BY   TotalOrderPerState desc
+
+ --Creating And Using A Temp Table To perform Calculations
+ 
+ DROP TABLE if exists #PercentOrderPerState
+ CREATE TABLE #PercentOrderPerState
+ (
+ [ship-state] nvarchar(255),
+ TotalShipStateOrders float,
+ PercentageOfTotalShipStateOrder float
+ )
+
+ INSERT INTO #PercentOrderPerState
+ SELECT [ship-state], count([ship-state]) as TotalShipStateOrders, Round(cast(count([ship-state])as float)/128942*100,3)as PercentageOfTotalShipStateOrder
+ FROM [Portfolio Project]..['Amazon Sale Report$']
+ GROUP BY [ship-state]
+
+ SELECT *
+ FROM #PercentOrderPerState
+ ORDER BY 3 desc
+
+
